@@ -39,8 +39,8 @@
 - 游戏网页：https://office-management.279905028qq.workers.dev
 - 联机服务：https://office-monopoly-room.279905028qq.workers.dev
 - 源码仓库：https://github.com/279905028/officeManagement ，分支 `main`。
-- 前端 Worker：`office-management`，版本 `7575b30b-5ea4-4a4c-aede-a913f64be27f`。
-- 房间 Worker：`office-monopoly-room`，版本 `8b4e4e97-02c2-4b8d-b6bb-fd7bdffaf5f0`。
+- 前端 Worker：`office-management`，版本 `cd682355-3102-4efc-b877-8351c8547b3a`。
+- 房间 Worker：`office-monopoly-room`，版本 `8981b6ca-ea18-46f5-801d-c3dec5f65c2a`。
 - 已补齐静态站点 Wrangler 配置及 `npm run deploy` 脚本，设置生产联机地址和严格的前端来源白名单，重新生成绑定类型。
 - 35 项规则测试、前后端 TypeScript 检查、生产构建与静态部署 dry-run 通过。
 - 4 项真实线上联机测试全部通过：四人状态一致、满员和开局拒绝、操作去重、越权和版本校验、刷新重连、非法来源、匿名席位验证、电脑轮转、道具同步、防护和骰子数量校验。
@@ -57,4 +57,5 @@
 - Node.js 24；依次完成依赖安装、类型检查、规则测试、构建和部署预检、前后端发布、健康检查与线上联机验收。
 - 官方 Actions 固定到提交 SHA；GitHub 权限为 `contents: read`，生产部署串行执行，Cloudflare 凭据仅用于部署步骤。
 - GitHub Secrets `CLOUDFLARE_ACCOUNT_ID` 与 `CLOUDFLARE_API_TOKEN` 均已配置。
-- [首次使用令牌运行](https://github.com/279905028/officeManagement/actions/runs/35844150606) 已完成 Linux 云端构建、前后端部署及线上健康检查。联机测试中三项通过，电脑轮转测试等待 10 秒后超时；线上单独复测四次自动轮转正常。将该测试等待窗口调整为 30 秒（仍低于 60 秒回合超时），并在超时时报告最后收到的状态、回合、阶段和版本，继续执行完整流水线验收。
+- [首次使用令牌运行](https://github.com/279905028/officeManagement/actions/runs/35844150606) 的电脑轮转验收曾在 10 秒后超时；线上单独复测正常。将等待窗口调整为 30 秒（仍低于 60 秒回合超时），并在超时时报告最后收到的状态、回合、阶段和版本，保留所有原有断言。
+- **自动部署已验证成功**：[推送触发的成功运行](https://github.com/279905028/officeManagement/actions/runs/35844529044)，部署提交 `8d556b2320bb8a5a5be388630fcb8c51d0966189`，耗时 1 分 2 秒。Linux 云端安装、类型检查、35 项规则测试、生产构建、部署预检、前后端发布、健康检查及全部 4 项线上联机测试通过。
