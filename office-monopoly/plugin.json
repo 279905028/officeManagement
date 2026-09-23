@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "office-monopoly",
+  "version": "0.1.0",
+  "description": "打开中文工间大富翁，单人对电脑或通过房间码与最多四位玩家联机。",
+  "author": { "name": "工间大富翁" },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "工间大富翁",
+        "shortDescription": "安静玩一会儿，最多 4 人联机",
+        "longDescription": "打开简洁灰蓝配色的中文棋盘游戏，每局最多 15 分钟。支持单人电脑对手、昵称与房间码联机、买地收租、自由建房、抵押赎回，以及超时自动托管。朋友可以直接访问网页，无需安装插件。",
+        "developerName": "工间大富翁",
+        "capabilities": ["Interactive"],
+        "defaultPrompt": "打开工间大富翁，我想玩一局。"
+      }
+    }
+  }
+}
