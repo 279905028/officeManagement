@@ -56,4 +56,5 @@
 - 触发方式：推送 `main` 且修改 `game/` 或工作流文件；也支持在 Actions 页面手动触发 `main`。
 - Node.js 24；依次完成依赖安装、类型检查、规则测试、构建和部署预检、前后端发布、健康检查与线上联机验收。
 - 官方 Actions 固定到提交 SHA；GitHub 权限为 `contents: read`，生产部署串行执行，Cloudflare 凭据仅用于部署步骤。
-- GitHub Secret `CLOUDFLARE_ACCOUNT_ID` 已配置；待配置 `CLOUDFLARE_API_TOKEN` 后执行首次远程验收。
+- GitHub Secret `CLOUDFLARE_ACCOUNT_ID` 已配置；`CLOUDFLARE_API_TOKEN` 尚未配置。
+- 工作流已推送。首次 [GitHub Actions 运行](https://github.com/279905028/officeManagement/actions/runs/35843808128) 已通过 Linux 云端依赖安装、类型检查、35 项规则测试、前端生产构建及两项部署预检；部署步骤因缺少令牌按预期停止，线上版本未改变。保存令牌后需手动重新运行工作流完成发布验收。
