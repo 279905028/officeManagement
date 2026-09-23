@@ -23,7 +23,7 @@ function connect(seat){
     const existing=messages.find(predicate);if(existing)return Promise.resolve(existing);
     return new Promise((resolve,reject)=>{
       const waiter={predicate,resolve,reject};waiters.push(waiter);
-      waiter.timer=setTimeout(()=>{waiters.splice(waiters.indexOf(waiter),1);reject(new Error("WebSocket wait timed out"));},timeout);
+      waiter.timer=setTimeout(()=>{waiters.splice(waiters.indexOf(waiter),1);reject(new Error(`WebSocket wait timed out after ${timeout}ms (status=${latest?.status}, turn=${latest?.turn}, phase=${latest?.phase}, version=${latest?.version})`));},timeout);
     });
   };
   ws.on("message",raw=>{
@@ -102,7 +102,8 @@ test("单人模式含三位电脑，自动对手轮转并保留至少 200 现金
     assert.deepEqual(client.state.players.map(p=>p.cash),[2000,2000,2000,2000]);
     const autoId=client.send({type:"autoplay"});
     await client.wait(m=>m.type==="ack"&&m.commandId===autoId);
-    const after=await client.wait(m=>m.state?.turn>=5,10_000);
+    // Allow cloud alarm delivery jitter, while staying below the 60s turn timeout.
+    const after=await client.wait(m=>m.state?.turn>=5,30_000);
     assert.ok(after.state.players.every(p=>p.cash>=200));
     assert.equal(after.state.players.length,4);
   }finally{client.close();}
