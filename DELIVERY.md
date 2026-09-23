@@ -47,5 +47,13 @@
 - 首页、JavaScript、CSS 返回 HTTP 200；后端 `/health` 返回 `ok: true`。当前本机网络直连 `workers.dev` 超时，以上线上验收通过系统已有代理完成。
 - 补充执行 lint，发现原项目已有 React Hooks 规则、`prefer-const` 及构建目录扫描问题，lint 尚未通过；本次发布未扩展为业务代码重构。
 - 使用已安装的 Command Line Tools Git 完成仓库初始化，无需修改或接受 Xcode 许可。依赖、构建产物、本地数据库、凭据和旧源码压缩包不纳入提交。
-- 本次采用 Cloudflare CLI 发布，GitHub 推送不会自动触发后续部署。原 Sites 项目保留，独立 `office-monopoly` 插件仍为元数据草稿。
+- 首次发布采用 Cloudflare CLI；已添加 GitHub Actions 自动部署工作流，配置与验收状态见下方记录。原 Sites 项目保留，独立 `office-monopoly` 插件仍为元数据草稿。
 - 移除了免费套餐不支持的自定义 CPU 限额配置，未购买或升级任何付费服务。
+
+## GitHub 自动部署配置
+
+- 工作流：`.github/workflows/deploy-cloudflare.yml`。
+- 触发方式：推送 `main` 且修改 `game/` 或工作流文件；也支持在 Actions 页面手动触发 `main`。
+- Node.js 24；依次完成依赖安装、类型检查、规则测试、构建和部署预检、前后端发布、健康检查与线上联机验收。
+- 官方 Actions 固定到提交 SHA；GitHub 权限为 `contents: read`，生产部署串行执行，Cloudflare 凭据仅用于部署步骤。
+- GitHub Secret `CLOUDFLARE_ACCOUNT_ID` 已配置；待配置 `CLOUDFLARE_API_TOKEN` 后执行首次远程验收。

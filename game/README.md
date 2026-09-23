@@ -118,7 +118,24 @@ ROOM_TEST_ORIGIN=https://office-management.279905028qq.workers.dev \
 npm run test:integration
 ```
 
-独立后端构建检查：`npm run build:room`。前端构建：`npm run build`，静态输出目录为 `dist/client`。本仓库通过 CLI 手动发布；推送 GitHub 本身不会自动触发部署。不要提交浏览器席位凭证、Cloudflare 凭证、`.env`、`.dev.vars` 或本地运行时数据。
+独立后端构建检查：`npm run build:room`。前端构建：`npm run build`，静态输出目录为 `dist/client`。不要提交浏览器席位凭证、Cloudflare 凭证、`.env`、`.dev.vars` 或本地运行时数据。
+
+### GitHub 自动部署
+
+工作流位于仓库根目录 `.github/workflows/deploy-cloudflare.yml`。推送 `main` 且修改 `game/` 或工作流文件时自动运行；仅修改根目录文档不会部署。也可在 [Actions](https://github.com/279905028/officeManagement/actions/workflows/deploy-cloudflare.yml) 选择 **Run workflow**，分支选择 `main`。其他分支不会发布生产环境。
+
+流程使用 Node.js 24 和锁定依赖，依次执行类型检查、35 项规则测试、前端构建、前后端部署预检，再部署房间服务和网页，最后检查线上健康状态和 4 项 WebSocket 联机测试。构建或规则检查失败时不会部署；发布后验收失败会将该次运行标记为失败，需要检查日志，工作流不自动回滚。联机测试会创建临时房间，服务按现有 24 小时过期规则清理。
+
+在仓库 **Settings → Secrets and variables → Actions** 配置：
+
+| Secret | 用途 |
+| --- | --- |
+| `CLOUDFLARE_ACCOUNT_ID` | 当前 Cloudflare 账户 ID |
+| `CLOUDFLARE_API_TOKEN` | 该账户的 Workers 部署 API 令牌 |
+
+令牌可从 Cloudflare 的 **Edit Cloudflare Workers** 模板创建，并限制到部署使用的账户。不要使用本地 Wrangler 的临时 OAuth 登录令牌代替 CI API 令牌。相关官方说明：[Cloudflare GitHub Actions](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)。
+
+工作流的 GitHub 权限仅为 `contents: read`；Cloudflare 凭据只注入部署步骤。生产部署串行执行，避免前后端发布相互打断。现有 lint 问题另见交付记录，当前不作为发布门禁。
 
 部分网络无法直连 `workers.dev`，需要使用可访问该域名的网络或代理。本次没有配置自定义域名。原 `.openai/hosting.json` 仅保留原项目构建兼容性；当前发布不依赖 Sites 发布辅助脚本。`office-monopoly/` 仍是插件元数据草稿。
 

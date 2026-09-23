@@ -1,0 +1,92 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'game/**'
+      - '.github/workflows/deploy-cloudflare.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Finish both services before starting another production deployment.
+concurrency:
+  group: cloudflare-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: game
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+      SHARP_IGNORE_GLOBAL_LIBVIPS: '1'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: game/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --include=dev --include=optional
+
+      - name: Check types and game rules
+        run: |
+          npm run check
+          npm test
+
+      - name: Build and validate both deployments
+        run: |
+          npm run build
+          npm run build:room
+          node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js deploy --config wrangler.site.jsonc --dry-run
+
+      - name: Deploy room service and website
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo '::error::Configure CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in repository Actions secrets.'
+            exit 1
+          fi
+          npm run deploy:room
+          node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js deploy --config wrangler.site.jsonc
+
+      - name: Verify production endpoints
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 \
+            https://office-monopoly-room.279905028qq.workers.dev/health \
+            | node --input-type=module -e 'let body=""; for await (const chunk of process.stdin) body+=chunk; if (JSON.parse(body).ok!==true) process.exit(1);'
+          curl --fail --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 \
+            https://office-management.279905028qq.workers.dev/ --output /dev/null
+
+      - name: Verify multiplayer in production
+        env:
+          ROOM_TEST_URL: https://office-monopoly-room.279905028qq.workers.dev
+          ROOM_TEST_ORIGIN: https://office-management.279905028qq.workers.dev
+        run: npm run test:integration
+
+      - name: Record deployment
+        run: |
+          {
+            echo '### Cloudflare deployment verified'
+            echo "Commit: $GITHUB_SHA"
+            echo '- [Game](https://office-management.279905028qq.workers.dev)'
+            echo '- [Room health](https://office-monopoly-room.279905028qq.workers.dev/health)'
+            echo '- Type checks, game rules, build, endpoint checks and multiplayer tests passed.'
+          } >> "$GITHUB_STEP_SUMMARY"
